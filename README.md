@@ -2,36 +2,36 @@
 
 [README на русском](README.ru.md)
 
-you have a devin / windsurf subscription. your tools want an openai-compatible endpoint. this sits in the middle: a local relay that turns `/v1/chat/completions` into the ConnectRPC call the subscription backend speaks, so hermes / opencode / curl ride on the sub instead of a per-token bill.
+If you have a Devin / Windsurf subscription and your tools require an OpenAI-compatible endpoint, this sits in the middle. It is a local relay that translates `/v1/chat/completions` into the ConnectRPC protocol used by the subscription backend, allowing tools like Hermes, OpenCode, or curl to run against your subscription instead of billing per token.
 
-## what it does
+## What it does
 
-- reads your devin credentials from disk on every request — token rotation needs no restart
-- translates openai chat completions (streaming and non-streaming, tools, multi-turn `tool_calls`) into `exa.api_server_pb.ApiServerService/GetChatMessage`
-- keeps tool-call thinking signatures (gemini 4 argon, claude opus, swe-2) so stateless openai clients don't break on the second turn of a tool loop
-- maps usage counters back into openai `usage`
-- zero dependencies. python stdlib only.
+- Reads Devin credentials from disk on every request, picking up rotated tokens without requiring a restart.
+- Translates OpenAI chat completions (streaming, non-streaming, function calling, and multi-turn `tool_calls`) into `exa.api_server_pb.ApiServerService/GetChatMessage`.
+- Preserves tool-call thinking signatures (Gemini 4 Argon, Claude Opus, SWE-2) so stateless OpenAI clients remain stable across multi-turn tool loops.
+- Maps backend usage counters back into OpenAI-compatible `usage` payloads.
+- Zero dependencies-relies solely on the Python standard library.
 
-## what it is not
+## What it is not
 
-- not a cognition / devin / windsurf product, not affiliated with them
-- not a hosted service — runs on your machine, your creds
-- not a cred bundle — nothing private ships in this repo
+- Not an official Cognition / Devin / Windsurf product and not affiliated with them in any way.
+- Not a hosted service-runs locally on your machine with your own credentials.
+- Not a credential distributor-contains no private keys or tokens.
 
-## straight talk
+## Straight talk
 
-it uses subscription credentials outside the official client. that's a gray zone in their tos. hammer it and you can lose the subscription. your call.
+This tool uses subscription credentials outside the official client, which sits in a ToS gray area. Excessive or abusive traffic may result in your subscription being terminated. Use it at your own risk.
 
-## status
+## Status
 
-2026-10: the subscription this repo was built against has lapsed. `/v1/models` still answers from the cached catalog, real calls return `502 permission_denied` until a valid subscription is attached again. the code is published as-is.
+2026-10: The subscription this project was built against has lapsed. `/v1/models` still responds from the cached catalog, but actual completion calls will return `502 permission_denied` until backed by an active subscription. The code is published as-is.
 
-## requirements
+## Requirements
 
-- python 3.11+ (uses `tomllib`)
-- `~/.local/share/devin/credentials.toml` with `windsurf_api_key` (and optional `api_server_url`, default `https://server.codeium.com`)
+- Python 3.11+ (uses standard library `tomllib`)
+- `~/.local/share/devin/credentials.toml` containing `windsurf_api_key` (and optional `api_server_url`, defaults to `https://server.codeium.com`)
 
-## run
+## Run
 
 ```bash
 git clone https://github.com/vlelyavin/devin-proxy.git
@@ -39,22 +39,22 @@ cd devin-proxy
 python3 devin-proxy.py
 ```
 
-listens on `127.0.0.1:18805`.
+Listens on `127.0.0.1:18805`.
 
 ```bash
 curl -sS http://127.0.0.1:18805/v1/models
 ```
 
-## env
+## Env
 
 | var | default | meaning |
 |---|---|---|
 | `DEVIN_PROXY_HOST` | `127.0.0.1` | bind address |
 | `DEVIN_PROXY_PORT` | `18805` | bind port |
 
-## models
+## Models
 
-whatever your plan exposes; the ones this was used with:
+Exposes whatever models your plan provides. Tested with:
 
 ```
 gemini-4-argon-high / -medium / -low
@@ -65,7 +65,7 @@ gpt-6-astra-high
 gpt-6-sol-high
 ```
 
-use full ids. short aliases are not resolved by the backend.
+Always use full model IDs; the backend does not resolve short aliases.
 
 ## systemd (optional)
 
@@ -84,6 +84,6 @@ RestartSec=5
 WantedBy=default.target
 ```
 
-## license
+## License
 
-MIT. see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
